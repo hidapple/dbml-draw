@@ -26,6 +26,13 @@ Table comments {
   created_at timestamp [default: `now()`]
 }
 
+Table profiles {
+  id int [pk, increment]
+  user_id int
+  bio text
+}
+
 Ref: posts.user_id > users.id
 Ref: comments.post_id > posts.id
 Ref: comments.user_id > users.id
+Ref: profiles.user_id - users.id
