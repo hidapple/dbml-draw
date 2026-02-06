@@ -19,12 +19,8 @@ pub enum Commands {
         #[arg(short, long)]
         output: Option<PathBuf>,
 
-        /// Layout file path (defaults to <input>.layout.toml)
+        /// Layout file path (if not specified, auto-layout is used)
         #[arg(long)]
         layout: Option<PathBuf>,
-
-        /// Force auto-layout, ignoring existing layout file
-        #[arg(long)]
-        auto_layout: bool,
     },
 }

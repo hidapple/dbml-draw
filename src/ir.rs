@@ -1,3 +1,14 @@
+//! Intermediate Representation (IR) for ER diagrams.
+//!
+//! This module defines the internal data structures that sit between
+//! the parser (DBML AST) and the renderer (SVG output). By decoupling
+//! these layers, we can swap the parser or renderer independently.
+//!
+//! Data flow:
+//! ```text
+//! .dbml -> [parser] -> IR (Diagram) -> [layout] -> IR (with Position) -> [render] -> .svg
+//! ```
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
