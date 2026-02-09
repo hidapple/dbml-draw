@@ -16,13 +16,13 @@ fn main() -> Result<(), AppError> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Edit { input } => cmd_edit(input)?,
+        Commands::Open { input } => cmd_open(input)?,
     }
 
     Ok(())
 }
 
-fn cmd_edit(input: PathBuf) -> Result<(), AppError> {
+fn cmd_open(input: PathBuf) -> Result<(), AppError> {
     let dbml_content = std::fs::read_to_string(&input)?;
     let mut diagram = parser::parse_dbml(&dbml_content)?;
 

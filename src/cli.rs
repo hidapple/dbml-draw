@@ -10,8 +10,8 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Open an interactive editor for a DBML file
-    Edit {
+    /// Open an interactive viewer for a DBML file
+    Open {
         /// Input DBML file path
         input: PathBuf,
     },
