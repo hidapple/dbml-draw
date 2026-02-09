@@ -1,9 +1,9 @@
 mod cli;
+mod editor;
 mod error;
 mod ir;
 mod layout;
 mod parser;
-mod render;
 
 use std::path::PathBuf;
 
@@ -16,39 +16,19 @@ fn main() -> Result<(), AppError> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Generate {
-            input,
-            output,
-            layout,
-        } => cmd_generate(input, output, layout)?,
+        Commands::Edit { input } => cmd_edit(input)?,
     }
 
     Ok(())
 }
 
-fn cmd_generate(
-    input: PathBuf,
-    output: Option<PathBuf>,
-    layout_path: Option<PathBuf>,
-) -> Result<(), AppError> {
-    // Read DBML and parse it into IR
+fn cmd_edit(input: PathBuf) -> Result<(), AppError> {
     let dbml_content = std::fs::read_to_string(&input)?;
     let mut diagram = parser::parse_dbml(&dbml_content)?;
 
-    // Apply layout
-    layout::apply_layout(&mut diagram, layout_path.as_deref());
+    // Derive layout file path from input (e.g., schema.dbml -> schema.layout.toml)
+    let layout_path = input.with_extension("layout.toml");
+    layout::apply_layout(&mut diagram, Some(layout_path.as_path()));
 
-    // Render SVG
-    let svg = render::render_svg(&diagram);
-
-    // Write output file
-    let output_path = output.unwrap_or_else(|| {
-        let mut p = input.clone();
-        p.set_extension("svg");
-        p
-    });
-    std::fs::write(&output_path, &svg)?;
-    eprintln!("Generated: {}", output_path.display());
-
-    Ok(())
+    editor::open_editor(diagram, input, layout_path)
 }

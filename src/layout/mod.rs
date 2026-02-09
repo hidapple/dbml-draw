@@ -1,9 +1,9 @@
-use crate::ir::{Diagram, Position};
+use crate::ir::Position;
+use crate::ir::Diagram;
 use std::path::Path;
 
-mod auto_layout;
-mod layout_file;
-mod types;
+pub(crate) mod layout_file;
+pub(crate) mod types;
 
 pub fn apply_layout(diagram: &mut Diagram, layout_path: Option<&Path>) {
     if let Some(path) = layout_path {
@@ -18,7 +18,4 @@ pub fn apply_layout(diagram: &mut Diagram, layout_path: Option<&Path>) {
             }
         }
     }
-
-    // Auto-layout tables that still have no position
-    auto_layout::grid_layout(diagram);
 }
