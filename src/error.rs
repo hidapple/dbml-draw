@@ -10,4 +10,7 @@ pub enum AppError {
 
     #[error("Layout file error: {0}")]
     LayoutError(String),
+
+    #[error("Editor error: {0}")]
+    EditorError(String),
 }

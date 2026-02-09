@@ -10,17 +10,9 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Generate an SVG diagram from a DBML file
-    Generate {
+    /// Open an interactive viewer for a DBML file
+    Open {
         /// Input DBML file path
         input: PathBuf,
-
-        /// Output SVG file path (defaults to <input>.svg)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// Layout file path (if not specified, auto-layout is used)
-        #[arg(long)]
-        layout: Option<PathBuf>,
     },
 }
