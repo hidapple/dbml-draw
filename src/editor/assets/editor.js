@@ -1,29 +1,35 @@
 // =========================================================================
 // Constants (layout / style)
 // =========================================================================
-const MIN_TABLE_WIDTH = 160;
-const HEADER_HEIGHT = 36;
-const ROW_HEIGHT = 28;
-const PADDING_X = 12;
-const BORDER_RADIUS = 4;
-const FONT_SIZE = 14;
-const HEADER_FONT_SIZE = 15;
+const MIN_TABLE_WIDTH = 200;
+const HEADER_HEIGHT = 38;
+const ROW_HEIGHT = 32;
+const PADDING_X = 16;
+const BORDER_RADIUS = 8;
+const FONT_SIZE = 13;
+const HEADER_FONT_SIZE = 13;
 
-const HEADER_BG = "#3498db";
-const HEADER_TEXT = "#ffffff";
+// Font stacks
+const FONT_MONO = '"SF Mono", Menlo, Monaco, "Cascadia Code", monospace';
+const FONT_SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+
+// Color palette — Modern slate with indigo accent
+const HEADER_BG = "#1e293b";
+const HEADER_TEXT = "#f1f5f9";
 const TABLE_BG = "#ffffff";
-const TABLE_BORDER = "#cccccc";
-const COLUMN_TEXT = "#333333";
-const TYPE_TEXT = "#888888";
-const PK_COLOR = "#e74c3c";
-const RELATION_STROKE = "#666666";
+const TABLE_BORDER = "#e2e8f0";
+const COLUMN_TEXT = "#334155";
+const TYPE_TEXT = "#94a3b8";
+const PK_COLOR = "#6366f1";
+const ROW_SEPARATOR = "#f1f5f9";
+const RELATION_STROKE = "#94a3b8";
 const RELATION_STROKE_WIDTH = 1.5;
 const MARKER_LENGTH = 24;
-const CANVAS_BG = "#f5f5f5";
+const CANVAS_BG = "#f8fafc";
 
 // Auto-layout constants
-const SPACING_X = 100;
-const SPACING_Y = 80;
+const SPACING_X = 120;
+const SPACING_Y = 100;
 const START_X = 50;
 const START_Y = 50;
 
@@ -57,19 +63,20 @@ function tableFullName(table) {
 
 function computeTableWidths() {
   if (!ctx || !diagram) return;
+  const PK_BADGE_EXTRA = 36; // badge width + gap
+
   for (const table of diagram.tables) {
     let maxRowWidth = 0;
 
-    ctx.font = FONT_SIZE + "px monospace";
+    ctx.font = FONT_SIZE + "px " + FONT_MONO;
     for (const col of table.columns) {
-      const colText = col.is_pk ? "\u{1F511} " + col.name : col.name;
-      const typeText = col.type_raw;
-      const gap = 8;
-      const rowWidth = ctx.measureText(colText).width + gap + ctx.measureText(typeText).width;
-      maxRowWidth = Math.max(maxRowWidth, rowWidth);
+      const nameWidth = ctx.measureText(col.name).width + (col.is_pk ? PK_BADGE_EXTRA : 0);
+      const typeWidth = ctx.measureText(col.type_raw).width;
+      const gap = 16;
+      maxRowWidth = Math.max(maxRowWidth, nameWidth + gap + typeWidth);
     }
 
-    ctx.font = "bold " + HEADER_FONT_SIZE + "px monospace";
+    ctx.font = "600 " + HEADER_FONT_SIZE + "px " + FONT_SANS;
     const headerWidth = ctx.measureText(table.id.name).width;
 
     const contentWidth = Math.max(maxRowWidth, headerWidth);
@@ -477,7 +484,7 @@ function drawMarker(ctx, x, y, angle, markerType) {
 
   ctx.strokeStyle = RELATION_STROKE;
   ctx.lineWidth = RELATION_STROKE_WIDTH;
-  ctx.fillStyle = "white";
+  ctx.fillStyle = CANVAS_BG;
 
   switch (markerType) {
     case "one-mandatory":
@@ -559,22 +566,26 @@ function drawTable(table) {
   const w = table.width || MIN_TABLE_WIDTH;
   const h = tableHeight(table);
 
-  // Shadow
+  // Shadow — soft, modern drop shadow
   ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.1)";
-  ctx.shadowBlur = 6;
+  ctx.shadowColor = "rgba(15, 23, 42, 0.08)";
+  ctx.shadowBlur = 20;
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
+  ctx.shadowOffsetY = 6;
 
-  // Border rect with rounded corners
+  // Body with rounded corners
   ctx.beginPath();
   ctx.roundRect(pos.x, pos.y, w, h, BORDER_RADIUS);
   ctx.fillStyle = TABLE_BG;
   ctx.fill();
+  ctx.restore();
+
+  // Border
+  ctx.beginPath();
+  ctx.roundRect(pos.x, pos.y, w, h, BORDER_RADIUS);
   ctx.strokeStyle = TABLE_BORDER;
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.restore();
 
   // Header background (top rounded, bottom square)
   ctx.beginPath();
@@ -582,40 +593,67 @@ function drawTable(table) {
   ctx.fillStyle = HEADER_BG;
   ctx.fill();
 
-  // Header text
-  ctx.font = "bold " + HEADER_FONT_SIZE + "px monospace";
+  // Header text (sans-serif, semibold)
+  ctx.font = "600 " + HEADER_FONT_SIZE + "px " + FONT_SANS;
   ctx.fillStyle = HEADER_TEXT;
   ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
   ctx.fillText(table.id.name, pos.x + PADDING_X, pos.y + HEADER_HEIGHT / 2);
 
-  // Separator line
-  ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y + HEADER_HEIGHT);
-  ctx.lineTo(pos.x + w, pos.y + HEADER_HEIGHT);
-  ctx.strokeStyle = TABLE_BORDER;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
   // Columns
-  ctx.font = FONT_SIZE + "px monospace";
-  ctx.textBaseline = "middle";
   for (let i = 0; i < table.columns.length; i++) {
     const col = table.columns[i];
     const rowY = pos.y + HEADER_HEIGHT + i * ROW_HEIGHT;
 
-    // Column name
-    const colText = col.is_pk ? "\u{1F511} " + col.name : col.name;
-    ctx.fillStyle = col.is_pk ? PK_COLOR : COLUMN_TEXT;
+    // Subtle row separator
+    if (i > 0) {
+      ctx.beginPath();
+      ctx.moveTo(pos.x + 1, rowY);
+      ctx.lineTo(pos.x + w - 1, rowY);
+      ctx.strokeStyle = ROW_SEPARATOR;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.textBaseline = "middle";
     ctx.textAlign = "left";
-    ctx.fillText(colText, pos.x + PADDING_X, rowY + ROW_HEIGHT / 2);
+
+    if (col.is_pk) {
+      // PK badge
+      const badgeText = "PK";
+      ctx.font = "600 10px " + FONT_SANS;
+      const badgeTextW = ctx.measureText(badgeText).width;
+      const badgePadX = 5;
+      const badgeW = badgeTextW + badgePadX * 2;
+      const badgeH = 18;
+      const badgeX = pos.x + PADDING_X;
+      const badgeY = rowY + (ROW_HEIGHT - badgeH) / 2;
+
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+      ctx.fillStyle = "rgba(99, 102, 241, 0.1)";
+      ctx.fill();
+
+      ctx.fillStyle = PK_COLOR;
+      ctx.fillText(badgeText, badgeX + badgePadX, rowY + ROW_HEIGHT / 2);
+
+      // Column name (bold for PK)
+      ctx.font = "600 " + FONT_SIZE + "px " + FONT_MONO;
+      ctx.fillStyle = COLUMN_TEXT;
+      ctx.fillText(col.name, badgeX + badgeW + 8, rowY + ROW_HEIGHT / 2);
+    } else {
+      ctx.font = FONT_SIZE + "px " + FONT_MONO;
+      ctx.fillStyle = COLUMN_TEXT;
+      ctx.fillText(col.name, pos.x + PADDING_X, rowY + ROW_HEIGHT / 2);
+    }
 
     // Type (right aligned)
+    ctx.font = FONT_SIZE + "px " + FONT_MONO;
     ctx.fillStyle = TYPE_TEXT;
     ctx.textAlign = "right";
     ctx.fillText(col.type_raw, pos.x + w - PADDING_X, rowY + ROW_HEIGHT / 2);
   }
 
-  // Reset text align
   ctx.textAlign = "left";
 }
 
